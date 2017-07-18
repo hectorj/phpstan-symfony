@@ -11,6 +11,7 @@ use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Scalar\String_;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class ContainerInterfaceUnknownServiceRule implements Rule
@@ -33,7 +34,7 @@ final class ContainerInterfaceUnknownServiceRule implements Rule
 
 	public function processNode(Node $node, Scope $scope): array
 	{
-		if ($node instanceof MethodCall && $node->name === 'get' && $scope->getType($node->var)->getClass() === ContainerInterface::class) {
+		if ($node instanceof MethodCall && $node->name === 'get' && in_array($scope->getType($node->var)->getClass(), [ContainerInterface::class, Controller::class])) {
 			$service = $this->serviceMap->getServiceFromNode($node->args[0] ?? null);
 
 			if (is_null($service)) {
