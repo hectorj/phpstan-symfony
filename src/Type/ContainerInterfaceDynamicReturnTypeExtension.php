@@ -43,14 +43,12 @@ final class ContainerInterfaceDynamicReturnTypeExtension implements DynamicMetho
 		MethodCall $methodCall,
 		Scope $scope
 	): Type {
-		$services = $this->serviceMap->getServices();
-		return isset($methodCall->args[0])
-			&& $methodCall->args[0] instanceof Arg
-			&& $methodCall->args[0]->value instanceof String_
-			&& \array_key_exists($methodCall->args[0]->value->value, $services)
-			&& !$services[$methodCall->args[0]->value->value]['synthetic']
-			? new ObjectType($services[$methodCall->args[0]->value->value]['class'])
-			: $methodReflection->getReturnType();
+		$service = $this->serviceMap->getServiceFromNode($methodCall->args[0] ?? null);
+		if (is_null($service) || $service['synthetic']) {
+			return $methodReflection->getReturnType();
+		}
+
+		return new ObjectType($service['class'] ?? $service['id']);
 	}
 
 }
