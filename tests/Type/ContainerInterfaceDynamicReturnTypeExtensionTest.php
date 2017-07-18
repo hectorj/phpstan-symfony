@@ -5,6 +5,8 @@ declare(strict_types = 1);
 namespace Lookyman\PHPStan\Symfony\Type;
 
 use Lookyman\PHPStan\Symfony\ServiceMap;
+use PhpParser\Node\Expr\ClassConstFetch;
+use PhpParser\Node\Name\FullyQualified;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\Type\DynamicMethodReturnTypeExtension;
@@ -27,13 +29,13 @@ final class ContainerInterfaceDynamicReturnTypeExtensionTest extends TestCase
 	{
 		self::assertInstanceOf(
 			DynamicMethodReturnTypeExtension::class,
-			new ContainerInterfaceDynamicReturnTypeExtension(new ServiceMap(__DIR__ . '/../container.xml'))
+			new ContainerInterfaceDynamicReturnTypeExtension(new ServiceMap(__DIR__.'/../container.xml'))
 		);
 	}
 
 	public function testGetClass()
 	{
-		$extension = new ContainerInterfaceDynamicReturnTypeExtension(new ServiceMap(__DIR__ . '/../container.xml'));
+		$extension = new ContainerInterfaceDynamicReturnTypeExtension(new ServiceMap(__DIR__.'/../container.xml'));
 		self::assertEquals(ContainerInterface::class, $extension::getClass());
 	}
 
@@ -45,7 +47,7 @@ final class ContainerInterfaceDynamicReturnTypeExtensionTest extends TestCase
 		$methodFoo = $this->createMock(MethodReflection::class);
 		$methodFoo->expects(self::once())->method('getName')->willReturn('foo');
 
-		$extension = new ContainerInterfaceDynamicReturnTypeExtension(new ServiceMap(__DIR__ . '/../container.xml'));
+		$extension = new ContainerInterfaceDynamicReturnTypeExtension(new ServiceMap(__DIR__.'/../container.xml'));
 		self::assertTrue($extension->isMethodSupported($methodGet));
 		self::assertFalse($extension->isMethodSupported($methodFoo));
 	}
@@ -55,7 +57,7 @@ final class ContainerInterfaceDynamicReturnTypeExtensionTest extends TestCase
 	 */
 	public function testGetTypeFromMethodCall(MethodReflection $methodReflection, MethodCall $methodCall, Type $expectedType)
 	{
-		$extension = new ContainerInterfaceDynamicReturnTypeExtension(new ServiceMap(__DIR__ . '/../container.xml'));
+		$extension = new ContainerInterfaceDynamicReturnTypeExtension(new ServiceMap(__DIR__.'/../container.xml'));
 		$type = $extension->getTypeFromMethodCall(
 			$methodReflection,
 			$methodCall,
@@ -76,6 +78,11 @@ final class ContainerInterfaceDynamicReturnTypeExtensionTest extends TestCase
 				$this->createMock(MethodReflection::class),
 				new MethodCall($this->createMock(Expr::class), '', [new Arg(new String_('withClass'))]),
 				new ObjectType('Foo'),
+			],
+			'foundFromClassConst' => [
+				$this->createMock(MethodReflection::class),
+				new MethodCall($this->createMock(Expr::class), '', [new Arg(new ClassConstFetch(new FullyQualified('FullyQualified\Foo'), 'class'))]),
+				new ObjectType('FullyQualified\Foo'),
 			],
 			'notFound' => [
 				$methodReflectionNotFound,
